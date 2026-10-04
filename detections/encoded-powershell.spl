@@ -1,0 +1,14 @@
+```Detection: Encoded PowerShell Execution```
+```MITRE ATT&CK: T1059.001 (PowerShell), T1027.010 (Command Obfuscation)```
+```Data source: Sysmon Event ID 1 (process creation), index=sysmon```
+```Alert schedule: cron */5 * * * *, time range -6m@m to -1m@m, trigger when results > 0```
+
+index=sysmon source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
+| rex "<EventID>(?<EventCode>\d+)</EventID>"
+| rex "<Data Name='Image'>(?<Image>[^<]+)</Data>"
+| rex "<Data Name='CommandLine'>(?<CommandLine>[^<]+)</Data>"
+| rex "<Data Name='ParentImage'>(?<ParentImage>[^<]+)</Data>"
+| rex "<Data Name='User'>(?<User>[^<]+)</Data>"
+| where EventCode="1" AND like(lower(Image), "%\\powershell.exe")
+| regex CommandLine="(?i)\s[-/]e(c|nc?o?d?e?d?c?o?m?m?a?n?d?)?\s"
+| table _time, host, User, ParentImage, Image, CommandLine
